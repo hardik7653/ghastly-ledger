@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: case-archives-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - APP_PASSPHRASE=${APP_PASSPHRASE:-123}
+      - JWT_SECRET=${JWT_SECRET:-change_me_to_a_secure_random_string}
+      - PORT=3000
+    volumes:
+      - uploads:/app/uploads
+      - database:/app
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: case-archives-frontend
+    ports:
+      - "8080:80"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  uploads:
+    driver: local
+  database:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
